@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import compression from 'compression';
 import helmet from 'helmet';
 import limiter from './lib/express_rate_limit';
+import v1Routes from './routes/v1';
 
 const app = express();
 
@@ -44,12 +45,30 @@ app.use(helmet());
 //apply rate limiting
 app.use(limiter);
 
-app.get('/', (req, res) => {
-  res.json({
-    message: 'Hello World',
-  });
-});
+(async () => {
+  try {
+    app.use('/api/v1', v1Routes);
 
-app.listen(config.PORT, () => {
-  console.log(`Server is Listening on http://localhost:${config.PORT}`);
-});
+    app.listen(config.PORT, () => {
+      console.log(`Server is Listening on http://localhost:${config.PORT}`);
+    });
+  } catch (error) {
+    console.log('Failed to start the server', error);
+
+    if (config.NODE_ENV === 'production') {
+      process.exit(1);
+    }
+  }
+})();
+
+const handleServerShutdown = async () => {
+  try {
+    console.log('Server is SHUTDOWN');
+    process.exit(0);
+  } catch (error) {
+    console.log('Error during server shutdown', error);
+  }
+};
+
+process.on('SIGINT', handleServerShutdown);
+process.on('SIGTERM', handleServerShutdown);
