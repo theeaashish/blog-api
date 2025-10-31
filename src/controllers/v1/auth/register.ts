@@ -4,6 +4,7 @@ import type { Request, Response } from 'express';
 import User, { type UserType } from '../../../models/user';
 import { generateUsername } from '../../../utils';
 import { generateAccessToken, generateRefreshToken } from '../../../lib/jwt';
+import Token from '../../../models/token';
 
 type UserData = Pick<UserType, 'email' | 'password' | 'role'>;
 
@@ -25,6 +26,13 @@ const register = async (req: Request, res: Response): Promise<void> => {
     // generate access token and refresh token
     const accessToken = generateAccessToken(newUser._id);
     const refreshToken = generateRefreshToken(newUser._id);
+
+    // store refresh token in db
+    await Token.create({ token: refreshToken, userId: newUser._id });
+    logger.info('Refresh token created for user', {
+        userId: newUser._id,
+        token: refreshToken,
+    });
 
     res.cookie('refreshToken', refreshToken, {
       httpOnly: true,
