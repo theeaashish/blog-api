@@ -11,7 +11,16 @@ type UserData = Pick<UserType, 'email' | 'password' | 'role'>;
 const register = async (req: Request, res: Response): Promise<void> => {
   const { email, password, role } = req.body as UserData;
 
-  console.log(email, password, role);
+  if (role === 'admin' && !config.WHITELIST_ADMIN_MAIL.includes(email)) {
+    res.status(403).json({
+      code: 'Forbidden',
+      message: 'You are not allowed to register as an admin.',
+    });
+    logger.warn('Unauthorized admin registration attempt', { email });
+    return;
+  }
+
+  // console.log(email, password, role);
 
   try {
     const username = generateUsername();
@@ -30,8 +39,8 @@ const register = async (req: Request, res: Response): Promise<void> => {
     // store refresh token in db
     await Token.create({ token: refreshToken, userId: newUser._id });
     logger.info('Refresh token created for user', {
-        userId: newUser._id,
-        token: refreshToken,
+      userId: newUser._id,
+      token: refreshToken,
     });
 
     res.cookie('refreshToken', refreshToken, {
