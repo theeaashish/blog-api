@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { body, param, query } from 'express-validator';
+import { body } from 'express-validator';
 import authenticate from '../../middlewares/authenticate';
 import authorize from '../../middlewares/authorize';
 import getCurrentUser from '../../controllers/v1/user/get_current_user';
 import updateCurrentUser from '../../controllers/v1/user/update_current_user';
 import User from '../../models/user';
 import validationError from '../../middlewares/validationError';
+import deleteCurrentUser from '../../controllers/v1/user/delete_current_user';
 
 const router = Router();
 
@@ -67,5 +68,14 @@ router.put(
   validationError,
   updateCurrentUser,
 );
+
+router.delete(
+  '/current',
+  authenticate,
+  authorize(['user', 'admin']),
+  deleteCurrentUser,
+);
+
+router.get('/', authenticate, authorize(['admin']), )
 
 export default router;
