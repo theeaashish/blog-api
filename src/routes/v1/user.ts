@@ -8,6 +8,8 @@ import User from '../../models/user';
 import validationError from '../../middlewares/validationError';
 import deleteCurrentUser from '../../controllers/v1/user/delete_current_user';
 import getAllUsers from '../../controllers/v1/user/get_all_users';
+import getUser from '../../controllers/v1/user/get_user';
+import deleteUser from '../../controllers/v1/user/delete_user';
 
 const router = Router();
 
@@ -99,6 +101,17 @@ router.get(
   authorize(['admin']),
   param('userId').notEmpty().isMongoId().withMessage('Invalid user Id'),
   validationError,
+  getUser,
 );
+
+router.delete(
+  '/:userId',
+  authenticate,
+  authorize(['admin']),
+  param('userId').notEmpty().isMongoId().withMessage('Invalid user Id'),
+  validationError,
+  deleteUser,
+);
+
 
 export default router;
