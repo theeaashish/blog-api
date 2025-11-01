@@ -1,23 +1,27 @@
 import { logger } from '../../../lib/winston';
 import User from '../../../models/user';
+import config from '../../../config';
 import type { Request, Response } from 'express';
 
-const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
+const getAllUsers = async (req: Request, res: Response): Promise<void> => {
   try {
-    const userId = req.userId;
+    const limit = parseInt(req.query.limit as string) || config.defaultResLimit;
+    const offset =
+      parseInt(req.query.offset as string) || config.defaultResOffset;
+    const total = await User.countDocuments();
 
-    const user = await User.findById(userId).select('-__v').lean().exec();
-
-    if (!user) {
-      res.status(404).json({
-        code: 'NotFound',
-        message: 'User not found',
-      });
-      return;
-    }
+    const users = await User.find()
+      .select('-__v')
+      .limit(limit)
+      .skip(offset)
+      .lean()
+      .exec();
 
     res.status(200).json({
-      user,
+      limit,
+      offset,
+      total,
+      users,
     });
   } catch (error) {
     res.status(500).json({
@@ -25,8 +29,8 @@ const getCurrentUser = async (req: Request, res: Response): Promise<void> => {
       message: 'Internal Server Error',
       error: error,
     });
-    logger.error('Error while getting current user', error);
+    logger.error('Error while getting all users', error);
   }
 };
 
-export default getCurrentUser;
+export default getAllUsers;
